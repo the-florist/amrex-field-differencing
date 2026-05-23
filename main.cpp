@@ -17,9 +17,11 @@
  *   plotfiles_2  = plt00000 plt00100 ...
  *
  *  --- Shared options ---
- *   output_dir  = spectra/                (directory to write spectrum .dat files)
- *   component   = R                       (component name; default "R")
- *   L           = 1.0                     (physical box length; default: read from file)
+ *   output_dir           = spectra/       (directory to write spectrum .dat files)
+ *   component            = R              (component name; default "R")
+ *   L                    = 1.0            (physical box length; default: read from file)
+ *   write_diff_plotfile  = 1              (write real-space difference field as an
+ *                                          AMReX plot file; difference mode only)
  *
  * plotfiles and plotfile_dir may both be specified; results are merged and sorted.
  * The same applies to plotfiles_2 / plotfile_dir_2.
@@ -35,6 +37,7 @@
 
 #include <AMReX.H>
 #include <AMReX_MultiFab.H>
+#include <AMReX_Geometry.H>
 #include <AMReX_PlotFileUtil.H>
 #include <AMReX_FFT.H>
 #include <AMReX_ParmParse.H>
@@ -302,6 +305,11 @@ int main(int argc, char* argv[])
         Real L_override = -1.0;
         pp.query("L", L_override);
 
+        // Optional: write the real-space difference field as an AMReX plot file
+        // (only meaningful in difference mode; silently ignored otherwise)
+        int write_diff_plt = 0;
+        pp.query("write_diff_plotfile", write_diff_plt);
+
         // Create the output directory on rank 0
         if (ParallelDescriptor::IOProcessor())
         {
@@ -404,6 +412,31 @@ int main(int argc, char* argv[])
                 MultiFab::Subtract(mf_field, mf2_r, 0, 0, 1, 0);
 
                 Print() << "  Difference field computed.\n";
+
+                // --- Optionally write the real-space difference to a plot file ---
+                if (write_diff_plt)
+                {
+                    // Build a minimal Geometry for the uniform Cartesian domain.
+                    // Physical domain: [0, L]^3, periodic in all directions.
+                    Box plt_domain(IntVect(0,0,0), IntVect(N-1,N-1,N-1));
+                    RealBox real_box(AMREX_D_DECL(0., 0., 0.),
+                                     AMREX_D_DECL(L,  L,  L));
+                    Array<int,AMREX_SPACEDIM> is_per{AMREX_D_DECL(1, 1, 1)};
+                    Geometry geom(plt_domain, real_box, CoordSys::cartesian, is_per);
+
+                    // Name the component so it is identifiable when visualised.
+                    Vector<std::string> var_names = {comp_name + "_diff"};
+
+                    // Output directory: <output_dir>/diff-<basename1>-vs-<basename2>
+                    std::string basename2   = path_basename(plotfiles_2[idx]);
+                    std::string plt_outname = output_dir + "/diff-"
+                                           + path_basename(pf_name)
+                                           + "-vs-" + basename2;
+
+                    WriteSingleLevelPlotfile(plt_outname, mf_field, var_names,
+                                            geom, pf1.time(), pf1.levelStep(0));
+                    Print() << "  Diff plotfile written: " << plt_outname << "\n";
+                }
             }
 
             // --- Forward FFT of the (possibly differenced) field ---
