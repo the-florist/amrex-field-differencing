@@ -3,4 +3,5 @@ output_dir="/cosma8/data/dp002/dc-flor1/test-plotfiles/output/"
 component=R
 
 plotfile_dir="./"
-# plotfile_dir_2="./"   # uncomment to enable difference mode
+# plotfile_dir_2="./"      # uncomment to enable difference mode
+# write_diff_plotfile=1    # write real-space diff field as AMReX plotfile (diff mode only)
