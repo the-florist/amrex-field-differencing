@@ -28,8 +28,8 @@
  * In difference mode both lists must contain the same number of entries;
  * they are paired in sorted order.
  *
- * Output (single mode):  <output_dir>/spectrum-<basename>.dat
- * Output (diff mode):    <output_dir>/spectrum-diff-<basename1>-vs-<basename2>.dat
+ * Output (single mode):  <output_dir>/spectrum-<levelStep>.dat
+ * Output (diff mode):    <output_dir>/spectrum-diff-<levelStep>.dat
  *          Two-column ASCII: k_mid  P(k)
  *
  * Build:  see GNUmakefile in this directory.
@@ -219,17 +219,6 @@ std::vector<std::string> scan_plotfile_dir(const std::string& dir)
     }
     std::sort(found.begin(), found.end());
     return found;
-}
-
-// ---------------------------------------------------------------------------
-// Helper: extract the final path component (basename) from a path string,
-// stripping any trailing slashes first.
-// ---------------------------------------------------------------------------
-std::string path_basename(std::string p)
-{
-    while (!p.empty() && p.back() == '/') p.pop_back();
-    auto slash = p.rfind('/');
-    return (slash != std::string::npos) ? p.substr(slash + 1) : p;
 }
 
 // ---------------------------------------------------------------------------
@@ -448,11 +437,9 @@ int main(int argc, char* argv[])
                     // Name the component so it is identifiable when visualised.
                     Vector<std::string> var_names = {comp_name + "_diff"};
 
-                    // Output directory: <output_dir>/diff-<basename1>-vs-<basename2>
-                    std::string basename2   = path_basename(plotfiles_2[idx]);
-                    std::string plt_outname = output_dir + "/diff-"
-                                           + path_basename(pf_name)
-                                           + "-vs-" + basename2;
+                    // Output directory: <output_dir>/diff-<levelStep>
+                    std::string plt_outname = output_dir + "/plt-diff-"
+                                           + std::to_string(pf1.levelStep(0));
 
                     WriteSingleLevelPlotfile(plt_outname, mf_field, var_names,
                                             geom, pf1.time(), pf1.levelStep(0));
@@ -478,17 +465,15 @@ int main(int argc, char* argv[])
             field_k.mult(inv_fac, 0, 1);
 
             // --- Build output filename ---
-            std::string basename1 = path_basename(pf_name);
             std::string out_path;
             if (diff_mode)
             {
-                std::string basename2 = path_basename(plotfiles_2[idx]);
                 out_path = output_dir + "/spectrum-diff-"
-                         + basename1 + "-vs-" + basename2 + ".dat";
+                         + std::to_string(pf1.levelStep(0)) + ".dat";
             }
             else
             {
-                out_path = output_dir + "/spectrum-" + basename1 + ".dat";
+                out_path = output_dir + "/spectrum-" + std::to_string(pf1.levelStep(0)) + ".dat";
             }
 
             // --- Compute and write the power spectrum ---
