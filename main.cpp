@@ -90,7 +90,7 @@ void compute_power_spectrum(cMultiFab       &field_k,
     constexpr Real tol  = 1.0e-12;
 
     if (kiso_max / dkiso - N/2 > tol)
-        amrex::Error("compute_power_spectrum: Isotropic k axis check failed.");
+        Error("compute_power_spectrum: Isotropic k axis check failed.");
 
     // kiso has N/2+1 entries (index 0 … N/2), ps_map and kcount likewise.
     Vector<Real> kiso  (N/2 + 1, 0.0);
@@ -108,7 +108,7 @@ void compute_power_spectrum(cMultiFab       &field_k,
         auto const& fp  = field_k.array(mfi);
         const Box&  bx  = mfi.fabbox();
 
-        amrex::ParallelFor(bx, [=, &ps_map, &kcount]
+        ParallelFor(bx, [=, &ps_map, &kcount]
             AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
             IntVect iv{i, j, k};
@@ -167,7 +167,7 @@ void compute_power_spectrum(cMultiFab       &field_k,
     {
         std::ofstream ofs(output_path);
         if (!ofs)
-            amrex::Abort("compute_power_spectrum: cannot open " + output_path);
+            Abort("compute_power_spectrum: cannot open " + output_path);
 
         ofs << std::scientific;
         ofs.precision(14);
@@ -188,7 +188,7 @@ void compute_power_spectrum(cMultiFab       &field_k,
 // ---------------------------------------------------------------------------
 int main(int argc, char* argv[])
 {
-    amrex::Initialize(argc, argv);
+    Initialize(argc, argv);
     {
         // ---- Parse inputs ----
         ParmParse pp;
@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
         {
             namespace fs = std::filesystem;
             if (!fs::is_directory(plotfile_dir))
-                amrex::Abort("plotfile_dir is not a directory: " + plotfile_dir);
+                Abort("plotfile_dir is not a directory: " + plotfile_dir);
 
             std::vector<std::string> found;
             for (const auto& entry : fs::directory_iterator(plotfile_dir))
@@ -230,7 +230,9 @@ int main(int argc, char* argv[])
         }
 
         if (plotfiles.empty())
-            amrex::Abort("No plot files found. Specify plotfiles=... or plotfile_dir=...");
+            Abort("No plot files found. Specify plotfiles=... or plotfile_dir=...");
+        else
+            Print() << "Found " << plotfiles.size() << " files at " << plotfile_dir << "\n";
 
         // Required: output directory
         std::string output_dir;
@@ -239,8 +241,10 @@ int main(int argc, char* argv[])
         while (output_dir.size() > 1 && output_dir.back() == '/') output_dir.pop_back();
 
         // Optional: component name (default "R")
-        std::string comp_name = "R";
+        std::string comp_name = "";
         pp.query("component", comp_name);
+        if (comp_name == "")
+            Abort("No component found. Please specify a MultiFab component in the params file.");
 
         // Optional: physical box length override (default: read from plot file)
         Real L_override = -1.0;
@@ -277,7 +281,7 @@ int main(int argc, char* argv[])
             int Ny = domain.length(1);
             int Nz = domain.length(2);
             if (Nx != Ny || Nx != Nz)
-                amrex::Abort("Domain must be cubic. Got "
+                Abort("Domain must be cubic. Got "
                     + std::to_string(Nx) + "x"
                     + std::to_string(Ny) + "x"
                     + std::to_string(Nz) + " in " + pf_name);
@@ -295,7 +299,7 @@ int main(int argc, char* argv[])
                 L = psize[0];
                 if (std::abs(psize[1] - L) > 1.e-12 * L ||
                     std::abs(psize[2] - L) > 1.e-12 * L)
-                    amrex::Abort("Domain must be cubic. probSize differs per axis.");
+                    Abort("Domain must be cubic. probSize differs per axis.");
             }
 
             Print() << "  N = " << N << ",  L = " << L
@@ -312,7 +316,7 @@ int main(int argc, char* argv[])
                 Print() << "  Available components:";
                 for (const auto& n : var_names) Print() << "  " << n;
                 Print() << "\n";
-                amrex::Abort("Component '" + comp_name + "' not found in " + pf_name);
+                Abort("Component '" + comp_name + "' not found in " + pf_name);
             }
             Print() << "  Component '" << comp_name
                     << "' found at index " << comp_idx << "\n";
@@ -359,6 +363,6 @@ int main(int argc, char* argv[])
 
         Print() << "\nDone.\n";
     }
-    amrex::Finalize();
+    Finalize();
     return 0;
 }

@@ -45,7 +45,7 @@ DIM     = 3
 TMP_BUILD_DIR ?= $(realpath .)/tmp_build_dir
 
 # Executable name
-EBASE = PowerSpectrumExtractor
+EBASE = exec
 
 # ---------------------------------------------------------------------------
 # AMReX build infrastructure
