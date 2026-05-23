@@ -403,6 +403,22 @@ int main(int argc, char* argv[])
 
                 Print() << "  time2 = " << pf2.time() << "\n";
 
+                // --- Ensure both plotfiles share the same simulation time ---
+                {
+                    const Real t1     = pf1.time();
+                    const Real t2     = pf2.time();
+                    const Real tscale = std::max(std::abs(t1), std::abs(t2));
+                    // Use a relative tolerance (1e-8) when the times are non-zero,
+                    // falling back to a tight absolute tolerance near t = 0.
+                    const Real tol    = (tscale > 0.0) ? 1.0e-8 * tscale : 1.0e-14;
+                    if (std::abs(t1 - t2) > tol)
+                        amrex::Abort("Time-stamp mismatch in pair "
+                            + std::to_string(idx) + ":\n"
+                            + "  " + pf_name          + "  ->  t = " + std::to_string(t1) + "\n"
+                            + "  " + plotfiles_2[idx] + "  ->  t = " + std::to_string(t2) + "\n"
+                            + "Both plotfiles must correspond to the same simulation time.");
+                }
+
                 // Read the component from plotfile 2.
                 // Remap it onto mf_field's box decomposition (handles different
                 // MPI layouts between the two runs) then subtract in-place.
