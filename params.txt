@@ -1,3 +1,4 @@
 output_dir="./"
 component=R
 plotfile_dir="./"
+# plotfile_dir_2="./"   # uncomment to enable difference mode
