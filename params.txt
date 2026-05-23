@@ -1,6 +1,6 @@
 output_dir="/cosma8/data/dp002/dc-flor1/test-plotfiles/output/"
 
-plotfile_dir="/cosma8/data/dp002/dc-flor1/test-plotfiles/A-1/"
-# plotfile_dir2="/cosma8/data/dp002/dc-flor1/test-plotfiles/A-100/"
-
 component=R
+
+plotfile_dir="./"
+# plotfile_dir_2="./"   # uncomment to enable difference mode
