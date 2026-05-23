@@ -197,7 +197,7 @@ void compute_power_spectrum(cMultiFab       &field_k,
         }
     }
 
-    Print() << "  Written: " << output_path << "\n";
+    Print() << "  Spectrum file written: " << output_path << "\n";
 }
 
 // ---------------------------------------------------------------------------
