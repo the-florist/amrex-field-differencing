@@ -1,0 +1,3 @@
+output_dir="./"
+component=R
+plotfile_dir="./"
