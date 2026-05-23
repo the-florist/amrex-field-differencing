@@ -253,6 +253,9 @@ int main(int argc, char* argv[])
         else
             Print() << "Found " << plotfiles.size() << " files at " << plotfile_dir << "\n";
 
+        Real scale = 1.;
+        pp.query("scale", scale);
+
         // ---- Build the optional second list (activates difference mode) ----
         Vector<std::string> plotfiles_2;
 
@@ -269,6 +272,9 @@ int main(int argc, char* argv[])
             auto found = scan_plotfile_dir(plotfile_dir_2);
             for (const auto& p : found) plotfiles_2.push_back(p);
         }
+
+        Real scale_2 = 1.;
+        pp.query("scale_2", scale_2);
 
         const bool diff_mode = !plotfiles_2.empty();
 
@@ -378,6 +384,7 @@ int main(int argc, char* argv[])
 
             // --- Read the component from plot file 1 ---
             MultiFab mf_field = pf1.get(0, comp_name);
+            mf_field.mult(1./scale, 0, 1);
 
             // --- Difference mode: subtract component from plot file 2 ---
             if (diff_mode)
@@ -417,6 +424,7 @@ int main(int argc, char* argv[])
                 // Remap it onto mf_field's box decomposition (handles different
                 // MPI layouts between the two runs) then subtract in-place.
                 MultiFab mf2 = pf2.get(0, comp_name);
+                mf2.mult(1./scale_2, 0, 1);
                 MultiFab mf2_r(mf_field.boxArray(), mf_field.DistributionMap(), 1, 0);
                 mf2_r.ParallelCopy(mf2, 0, 0, 1);
                 MultiFab::Subtract(mf_field, mf2_r, 0, 0, 1, 0);
