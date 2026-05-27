@@ -214,7 +214,16 @@ std::vector<std::string> scan_plotfile_dir(const std::string& dir)
     std::vector<std::string> found;
     for (const auto& entry : fs::directory_iterator(dir))
     {
-        if (entry.is_directory() && fs::exists(entry.path() / "Header"))
+        if (!entry.is_directory()) continue;
+
+        // Only accept directories named plt_????? (i.e. basename starts with
+        // "plt_"). This excludes checkpoint directories (chk_?????) and any
+        // other output that AMReX may place in the same folder.
+        const std::string name = entry.path().filename().string();
+        if (name.compare(0, 4, "plt_") != 0) continue;
+
+        // A valid AMReX plot file always contains a "Header" file.
+        if (fs::exists(entry.path() / "Header"))
             found.push_back(entry.path().string());
     }
     std::sort(found.begin(), found.end());
